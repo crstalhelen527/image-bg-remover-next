@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy with Simple Build
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
@@ -17,14 +17,11 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
         
-    - name: Install dependencies
+    - name: Install dependencies (简化版)
       run: |
-        # 先清理npm缓存
-        npm cache clean --force
-        # 使用npm install而不是npm ci
-        npm install
+        # 只安装核心依赖，跳过可选依赖
+        npm install --no-optional --legacy-peer-deps
         
     - name: Build project
       run: npm run build

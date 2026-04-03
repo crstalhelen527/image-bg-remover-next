@@ -1,4 +1,4 @@
-name: Deploy Reliable
+name: Deploy with pnpm
 
 on:
   push:
@@ -13,29 +13,24 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9
+        run_install: false
+        
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'  # 使用更稳定的Node.js 18
-        cache: 'npm'
+        node-version: '20'
+        cache: 'pnpm'
         
-    - name: Install dependencies with fallback
+    - name: Install dependencies with pnpm
       run: |
-        # 尝试多种安装方式
-        echo "尝试 npm ci..."
-        npm ci --legacy-peer-deps || {
-          echo "npm ci失败，尝试npm install..."
-          npm install --legacy-peer-deps --no-audit --no-fund
-        }
-        
-    - name: Verify installation
-      run: |
-        # 检查关键包是否安装
-        ls node_modules/.bin/next || echo "next命令未找到"
-        which next || npm list next
+        pnpm install --frozen-lockfile
         
     - name: Build project
-      run: npx next build
+      run: pnpm run build
       env:
         REMOVE_BG_API_KEY: ${{ secrets.REMOVE_BG_API_KEY }}
         NODE_ENV: production

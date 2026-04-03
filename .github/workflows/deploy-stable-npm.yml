@@ -1,4 +1,4 @@
-name: Deploy Reliable
+name: Deploy with Stable npm
 
 on:
   push:
@@ -13,29 +13,30 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Setup Node.js
+    - name: Setup Node.js with specific npm
       uses: actions/setup-node@v4
       with:
-        node-version: '18'  # 使用更稳定的Node.js 18
+        node-version: '20'
         cache: 'npm'
+        cache-dependency-path: package-lock.json
         
-    - name: Install dependencies with fallback
+    - name: Install stable npm version
       run: |
-        # 尝试多种安装方式
-        echo "尝试 npm ci..."
-        npm ci --legacy-peer-deps || {
-          echo "npm ci失败，尝试npm install..."
-          npm install --legacy-peer-deps --no-audit --no-fund
-        }
+        # 使用稳定的npm版本
+        npm install -g npm@10.5.0
         
-    - name: Verify installation
+    - name: Clean npm cache
       run: |
-        # 检查关键包是否安装
-        ls node_modules/.bin/next || echo "next命令未找到"
-        which next || npm list next
+        npm cache clean --force
+        rm -rf node_modules
+        
+    - name: Install dependencies
+      run: |
+        # 使用--legacy-peer-deps和--no-audit
+        npm ci --legacy-peer-deps --no-audit --no-fund
         
     - name: Build project
-      run: npx next build
+      run: npm run build
       env:
         REMOVE_BG_API_KEY: ${{ secrets.REMOVE_BG_API_KEY }}
         NODE_ENV: production

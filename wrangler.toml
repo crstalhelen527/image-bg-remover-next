@@ -1,0 +1,34 @@
+name = "image-bg-remover-next"
+compatibility_date = "2026-04-03"
+account_id = "da9508a0610236e7085687e13c88bf59"  # Cloudflare Account ID
+workers_dev = true
+
+# 环境变量（通过wrangler secret set命令设置）
+# REMOVE_BG_API_KEY = "your-api-key-here"
+
+[build]
+command = "npm run build"
+output_directory = ".next"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "image-bg-remover-assets"
+
+[vars]
+NODE_ENV = "production"
+NEXT_PUBLIC_APP_URL = "https://image-bg-remover-next.pages.dev"
+
+# Cloudflare Pages 配置
+[pages]
+name = "image-bg-remover-next"
+bucket_name = "image-bg-remover-next"
+production_branch = "main"
+compatibility_date = "2026-04-03"
+
+[[pages.deployments]]
+name = "production"
+environment = "production"
+
+[env.production]
+NODE_ENV = "production"
+NEXT_PUBLIC_APP_URL = "https://image-bg-remover-next.pages.dev"

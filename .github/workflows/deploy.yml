@@ -1,0 +1,84 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build project
+      run: npm run build
+      env:
+        REMOVE_BG_API_KEY: ${{ secrets.REMOVE_BG_API_KEY }}
+        NODE_ENV: production
+        
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/pages-action@v1
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: da9508a0610236e7085687e13c88bf59
+        projectName: image-bg-remover-next
+        directory: .next
+        gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Post-deployment notification
+      if: success()
+      run: |
+        echo "✅ 部署成功!"
+        echo "访问地址: https://image-bg-remover-next.pages.dev"
+        echo "构建时间: $(date)"
+        
+  test:
+    runs-on: ubuntu-latest
+    needs: deploy
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: |
+        # 检查构建输出
+        if [ -d ".next" ]; then
+          echo "✅ 构建输出目录存在"
+          ls -la .next/
+        else
+          echo "❌ 构建输出目录不存在"
+          exit 1
+        fi
+        
+        # 检查配置文件
+        if [ -f "wrangler.toml" ]; then
+          echo "✅ wrangler.toml 配置文件存在"
+        else
+          echo "❌ wrangler.toml 配置文件不存在"
+          exit 1
+        fi
+        
+        echo "✅ 所有测试通过"

@@ -12,7 +12,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.2.2",
     "axios": "^1.14.0",
     "form-data": "^4.0.5",
     "lucide-react": "^0.469.0",

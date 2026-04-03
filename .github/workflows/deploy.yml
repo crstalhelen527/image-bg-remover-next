@@ -5,10 +5,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-env:
-  # 设置Node.js 24以兼容GitHub Actions
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,7 +13,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Setup Node.js 20
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
@@ -25,20 +21,16 @@ jobs:
         
     - name: Install dependencies
       run: |
-        # 使用--legacy-peer-deps解决依赖冲突
-        npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-      
+        # 先清理npm缓存
+        npm cache clean --force
+        # 使用npm install而不是npm ci
+        npm install
+        
     - name: Build project
       run: npm run build
       env:
         REMOVE_BG_API_KEY: ${{ secrets.REMOVE_BG_API_KEY }}
         NODE_ENV: production
-        
-    - name: Prepare for Cloudflare Pages
-      run: |
-        # 创建Cloudflare Pages需要的配置
-        echo "构建完成，准备部署到Cloudflare Pages"
-        ls -la .next/
         
     - name: Deploy to Cloudflare Pages
       uses: cloudflare/pages-action@v1
@@ -48,6 +40,3 @@ jobs:
         projectName: image-bg-remover-next
         directory: .next
         gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-        # 使用Node.js运行时
-        compatibilityDate: '2026-04-03'
-        compatibilityFlags: 'nodejs_compat'
